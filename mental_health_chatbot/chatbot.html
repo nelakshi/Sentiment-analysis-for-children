@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mental Health Chatbot</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      margin: 0;
+      background: linear-gradient(to right, #d4fc79, #96e6a1);
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .chat-container {
+      background: white;
+      border-radius: 20px;
+      padding: 20px;
+      width: 90%;
+      max-width: 500px;
+      height: 80vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      overflow: hidden;
+    }
+
+    .chat-box {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px;
+    }
+
+    .chat-message {
+      background: #f1f1f1;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: #e0ffe0;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #cce5ff;
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .option-button, .download-button {
+      background: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .option-button:hover, .download-button:hover {
+      background: #45a049;
+    }
+
+    .download-button {
+      margin-top: 10px;
+    }
+
+    #myChart {
+      width: 100%;
+      height: 300px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-box" id="chatBox"></div>
+    <div id="options" class="options"></div>
+    <canvas id="myChart"></canvas> <!-- Placeholder for the chart -->
+  </div>
+
+  <script>
+    const questions = [
+      {
+        text: "How old are you?",
+        options: ["8-10", "10-12", "12-14", "15"]
+      },
+      {
+        text: "How often do you feel happy?",
+        options: ["Almost always", "Often", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "Do you feel sad for long periods?",
+        options: ["Never", "Sometimes", "Often", "Almost all the time"]
+      },
+      {
+        text: "Do you feel worried or anxious about things?",
+        options: ["Rarely", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Do you feel angry or frustrated often?",
+        options: ["Rarely", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Do you feel hopeless about the future?",
+        options: ["Never", "Sometimes", "Often", "Almost all the time"]
+      },
+      {
+        text: "Do you have trouble falling asleep or staying asleep?",
+        options: ["Never", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "How do you feel when you wake up in the morning?",
+        options: ["Energized and ready", "A little tired but okay", "Very tired", "Completely exhausted"]
+      },
+      {
+        text: "Do you feel tired during the day?",
+        options: ["Rarely", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Do you enjoy spending time with friends?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "Do you feel lonely or left out?",
+        options: ["Never", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "How comfortable do you feel talking to others?",
+        options: ["Very comfortable", "Somewhat comfortable", "A little uncomfortable", "Very uncomfortable"]
+      },
+      {
+        text: "Do you feel like your friends support you?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "Do you enjoy going to school?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "How do you feel about your schoolwork?",
+        options: ["Confident and happy", "It’s okay, but sometimes stressful", "Often stressed and overwhelmed", "I struggle and feel hopeless"]
+      },
+      {
+        text: "Have you been bullied at school?",
+        options: ["Never", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Do you feel safe at home?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "Can you talk to your parents/guardians about your feelings?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "Do you feel loved and supported by your family?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "How well do you handle stress?",
+        options: ["Very well", "Somewhat well", "Not very well", "Not at all"]
+      },
+      {
+        text: "What do you do when you feel upset?",
+        options: ["Talk to someone", "Try to distract myself", "Keep it inside", "Feel overwhelmed"]
+      },
+      {
+        text: "Do you have hobbies or activities that make you happy?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "How do you feel about yourself?",
+        options: ["Confident and happy", "Mostly okay", "Sometimes unhappy", "Very unhappy"]
+      },
+      {
+        text: "Do you compare yourself to others often?",
+        options: ["Rarely", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Do you feel hopeful about your future?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "Do you feel like you have someone to talk to when you're struggling?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      },
+      {
+        text: "Do you feel pressured to succeed in school or other activities?",
+        options: ["Never", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Have you ever thought about hurting yourself?",
+        options: ["Never", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Have you lost interest in things you used to enjoy?",
+        options: ["Never", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "How often do you feel overwhelmed by your emotions?",
+        options: ["Never", "Sometimes", "Often", "Almost always"]
+      },
+      {
+        text: "Do you believe things will get better when you're struggling?",
+        options: ["Always", "Most of the time", "Sometimes", "Rarely/Never"]
+      }
+    ];
+
+    let currentQuestion = 0;
+    const answers = [];
+
+    const chatBox = document.getElementById("chatBox");
+    const optionsContainer = document.getElementById("options");
+
+    function showMessage(text, sender = "bot") {
+      const msg = document.createElement("div");
+      msg.className = `chat-message ${sender}`;
+      msg.innerText = text;
+      chatBox.appendChild(msg);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function showOptions(question) {
+      optionsContainer.innerHTML = "";
+      question.options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.innerText = option;
+        btn.className = "option-button";
+        btn.onclick = () => handleAnswer(option);
+        optionsContainer.appendChild(btn);
+      });
+    }
+
+    function handleAnswer(option) {
+      showMessage(option, "user");
+      answers.push({ question: questions[currentQuestion].text, answer: option });
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        setTimeout(() => {
+          showMessage(questions[currentQuestion].text, "bot");
+          showOptions(questions[currentQuestion]);
+        }, 500);
+      } else {
+        optionsContainer.innerHTML = "";
+        showMessage("Thank you for completing the questionnaire! 💚", "bot");
+        showAnalysis();
+        showDownloadButton();
+      }
+    }
+
+    function showAnalysis() {
+      let sadCount = answers.filter(ans =>
+        ans.answer.includes("Rarely/Never") || ans.answer.includes("Almost all the time")
+      ).length;
+
+      let moodIssues = sadCount >= 10 ? "It seems like you're experiencing several emotional challenges." :
+                      sadCount >= 5 ? "You might be going through some stress or low mood recently." :
+                      "Your answers suggest a generally positive emotional state.";
+
+      showMessage("🧠 Feedback: " + moodIssues, "bot");
+      showGraph(); // Show the graph after feedback
+    }
+
+    function showGraph() {
+      const ctx = document.getElementById('myChart').getContext('2d');
+      const data = {
+        labels: ["Happy", "Sad", "Stressed", "Sleep Issues"],
+        datasets: [{
+          label: 'Your Emotional Health',
+          data: [4, 6, 5, 3], // Example data - you can modify this based on user answers
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          borderWidth: 1
+        }]
+      };
+
+      const config = {
+        type: 'bar',
+        data: data,
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      };
+
+      new Chart(ctx, config); // Create the chart
+    }
+
+    function showDownloadButton() {
+      const btn = document.createElement("button");
+      btn.innerText = "Download My Responses";
+      btn.className = "download-button";
+      btn.onclick = downloadCSV;
+      optionsContainer.appendChild(btn);
+    }
+
+    function downloadCSV() {
+      const csv = answers.map(r => `"${r.question}","${r.answer}"`).join("\n");
+      const blob = new Blob(["Question,Answer\n" + csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'mental_health_responses.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    // Start the chatbot
+    showMessage(questions[currentQuestion].text, "bot");
+    showOptions(questions[currentQuestion]);
+  </script>
+</body>
+</html>
